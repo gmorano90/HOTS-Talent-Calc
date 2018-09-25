@@ -42,10 +42,10 @@ open class BTNavigationDropdownMenu: UIView {
     // The height of the cell. Default is 50
     open var cellHeight: NSNumber! {
         get {
-            return self.configuration.cellHeight as NSNumber!
+            return self.configuration.cellHeight as NSNumber
         }
         set(value) {
-            self.configuration.cellHeight = CGFloat(value)
+            self.configuration.cellHeight = CGFloat(truncating: value)
         }
     }
 
@@ -294,7 +294,7 @@ open class BTNavigationDropdownMenu: UIView {
             titleToDisplay = title
         }
 
-        titleSize = (titleToDisplay as NSString).size(attributes: [NSFontAttributeName:self.configuration.navigationBarTitleFont])
+        titleSize = (titleToDisplay as NSString).size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary([convertFromNSAttributedStringKey(NSAttributedString.Key.font):self.configuration.navigationBarTitleFont]))
 
         // Set frame
         let frame = CGRect(x: 0, y: 0, width: titleSize.width + (self.configuration.arrowPadding + self.configuration.arrowImage.size.width)*2, height: self.navigationController!.navigationBar.frame.height)
@@ -306,7 +306,7 @@ open class BTNavigationDropdownMenu: UIView {
 
         // Init button as navigation title
         self.menuButton = UIButton(frame: frame)
-        self.menuButton.addTarget(self, action: #selector(BTNavigationDropdownMenu.menuButtonTapped(_:)), for: UIControlEvents.touchUpInside)
+        self.menuButton.addTarget(self, action: #selector(BTNavigationDropdownMenu.menuButtonTapped(_:)), for: UIControl.Event.touchUpInside)
         self.addSubview(self.menuButton)
 
         self.menuTitle = UILabel(frame: frame)
@@ -361,7 +361,7 @@ open class BTNavigationDropdownMenu: UIView {
 
         // Add Line on top
         self.topSeparator = UIView(frame: CGRect(x: 0, y: 0, width: menuWrapperBounds.size.width, height: 0.5))
-        self.topSeparator.autoresizingMask = UIViewAutoresizing.flexibleWidth
+        self.topSeparator.autoresizingMask = UIView.AutoresizingMask.flexibleWidth
         self.menuWrapper.addSubview(self.topSeparator)
 
         // Remove MenuWrapper from container view to avoid leaks
@@ -423,10 +423,10 @@ open class BTNavigationDropdownMenu: UIView {
     }
 
     func setupDefaultConfiguration() {
-        self.menuTitleColor = self.navigationController?.navigationBar.titleTextAttributes?[NSForegroundColorAttributeName] as? UIColor
+        self.menuTitleColor = convertFromOptionalNSAttributedStringKeyDictionary(self.navigationController?.navigationBar.titleTextAttributes)?[convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor)] as? UIColor
         self.cellBackgroundColor = self.navigationController?.navigationBar.barTintColor
-        self.cellSeparatorColor = self.navigationController?.navigationBar.titleTextAttributes?[NSForegroundColorAttributeName] as? UIColor
-        self.cellTextLabelColor = self.navigationController?.navigationBar.titleTextAttributes?[NSForegroundColorAttributeName] as? UIColor
+        self.cellSeparatorColor = convertFromOptionalNSAttributedStringKeyDictionary(self.navigationController?.navigationBar.titleTextAttributes)?[convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor)] as? UIColor
+        self.cellTextLabelColor = convertFromOptionalNSAttributedStringKeyDictionary(self.navigationController?.navigationBar.titleTextAttributes)?[convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor)] as? UIColor
 
         self.arrowTintColor = self.configuration.arrowTintColor
     }
@@ -458,7 +458,7 @@ open class BTNavigationDropdownMenu: UIView {
         // Reload data to dismiss highlight color of selected cell
         self.tableView.reloadData()
 
-        self.menuWrapper.superview?.bringSubview(toFront: self.menuWrapper)
+        self.menuWrapper.superview?.bringSubviewToFront(self.menuWrapper)
 
         UIView.animate(
             withDuration: self.configuration.animationDuration * 1.5,
@@ -473,7 +473,7 @@ open class BTNavigationDropdownMenu: UIView {
         )
     }
 
-    func hideMenu() {
+    @objc func hideMenu() {
         // Rotate arrow
         self.rotateArrow()
 
@@ -497,7 +497,7 @@ open class BTNavigationDropdownMenu: UIView {
         UIView.animate(
             withDuration: self.configuration.animationDuration,
             delay: 0,
-            options: UIViewAnimationOptions(),
+            options: UIView.AnimationOptions(),
             animations: {
                 self.tableView.frame.origin.y = -CGFloat(self.items.count) * self.configuration.cellHeight - 300
                 self.backgroundView.alpha = 0 },
@@ -520,7 +520,24 @@ open class BTNavigationDropdownMenu: UIView {
         //self.menuTitle.text = title
     }
     
-    func menuButtonTapped(_ sender: UIButton) {
+    @objc func menuButtonTapped(_ sender: UIButton) {
         self.isShown == true ? hideMenu() : showMenu()
     }
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToOptionalNSAttributedStringKeyDictionary(_ input: [String: Any]?) -> [NSAttributedString.Key: Any]? {
+	guard let input = input else { return nil }
+	return Dictionary(uniqueKeysWithValues: input.map { key, value in (NSAttributedString.Key(rawValue: key), value)})
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromNSAttributedStringKey(_ input: NSAttributedString.Key) -> String {
+	return input.rawValue
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromOptionalNSAttributedStringKeyDictionary(_ input: [NSAttributedString.Key: Any]?) -> [String: Any]? {
+	guard let input = input else { return nil }
+	return Dictionary(uniqueKeysWithValues: input.map {key, value in (key.rawValue, value)})
 }
